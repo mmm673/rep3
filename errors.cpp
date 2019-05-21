@@ -33,8 +33,9 @@ union PageKey
 };
 
 
-/* Prepare from 2 chars the key of the same configuration as in PageKey */
-#define CALC_PAGE_KEY( Addr, Color )	(  (Color) + (Addr) << 8 ) 
+/* Prepare from 2 chars the key of the same configuration as in PageKey 
+складывают адрес и число (исправление:  (Color) + (*Addr) << 8 ) */
+#define CALC_PAGE_KEY( Addr, Color )	(  (Color) + (Addr) << 8 )  
 
 
 /**
@@ -57,15 +58,22 @@ struct PageDesc
 
 /* storage for pages of all colors */
 static PageDesc* PageStrg[ 3 ];
+//не правильно проинициализировали, надо так
+//исправление :
+//PageInit(PageStrg[0], PG_COLOR_GREEN);
+//PageInit(PageStrg[1], PG_COLOR_YELLOW);
+//PageInit(PageStrg[0], PG_COLOR_RED);
 
 void PageStrgInit()
 {
 	memset( PageStrg, 0, sizeof(&PageStrg) );
+	// не нужно вставлять адрес - (исправление: memset( PageStrg, 0, sizeof(PageStrg) ) )
 }
 
 PageDesc* PageFind( void* ptr, char color )
 {
 	for( PageDesc* Pg = PageStrg[color]; Pg; Pg = Pg->next );
+	//пропущено сравнение, лишняя ; (испавление : for( PageDesc* Pg = PageStrg[color]; Pg!=NULL; Pg = Pg->next ) )
         if( Pg->uKey == CALC_PAGE_KEY(ptr,color) )
            return Pg;                                                                                                                                     
     return NULL;
@@ -93,6 +101,7 @@ PageDesc* PageInit( void* ptr, UINT color )
     PageDesc* pg = new PageDesc;
     if( pg )
         PAGE_INIT(&pg, ptr, color);
+	//не нужна адресация (исправление : - PAGE_INIT(pg, ptr, color); )
     else
         printf("Allocation has failed\n");
     return pg;
@@ -105,6 +114,7 @@ void PageDump()
 {
 	UINT color = 0;
 	#define PG_COLOR_NAME(clr) #clr
+	//#clr не инициализирована
 	char* PgColorName[] = 
 	{
 		PG_COLOR_NAME(PG_COLOR_RED),
@@ -116,8 +126,10 @@ void PageDump()
 	{
 		printf("PgStrg[(%s) %u] ********** \n", color, PgColorName[color] );
 		for( PageDesc* Pg = PageStrg[++color]; Pg != NULL; Pg = Pg->next )
+		//выход за пределы массива  
 		{
 			if( Pg->uAddr = NULL )
+			// сравнение неправильно написано (исправление : = - if( NULL == Pg->uAddr ) )
 				continue;
 
 			printf("Pg :Key = 0x%x, addr %p\n", Pg->uKey, Pg->uAddr );
